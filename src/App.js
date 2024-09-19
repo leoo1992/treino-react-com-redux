@@ -2,27 +2,39 @@ import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { contadorAdd, contadorDel } from "./redux/stores/contador/contador";
 import { modalOpen, modalClose } from "./redux/stores/modal/modal";
-import { fetchToken } from "./redux/stores/login/login";
+import { fetchToken, fetchUser } from "./redux/stores/login/login";
 
 function App() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const dispatch = useDispatch();
-
   const contador = useSelector((state) => state.contador);
   const modal = useSelector((state) => state.modal);
-  const login = useSelector((state) => state.login);
+  const token = useSelector((state) => state.login.token);
+  const user = useSelector((state) => state.login.user);
+  const dispatch = useDispatch();
 
   async function handleSubmit(e) {
     e.preventDefault();
 
-    if (username && password) {
-      dispatch(fetchToken({ username, password }));
-
-      setUsername("");
-      setPassword("");
-      await e.target.reset();
+    async function getAndSetUser(token) {
+      if (token) {
+        dispatch(fetchUser(token));
+      }
     }
+
+    async function getAndSetToken(username, password) {
+      if (username && password) {
+        return dispatch(fetchToken({ username, password }));
+      }
+    }
+
+    const { payload } = await getAndSetToken(username, password);
+    await getAndSetUser(payload?.token);
+
+    setUsername("");
+    setPassword("");
+
+    return await e.target.reset();
   }
 
   function capitalizeFirstLetter(string) {
@@ -30,17 +42,26 @@ function App() {
     return trimmedString.charAt(0).toUpperCase() + trimmedString.slice(1);
   }
 
-  function validateUser() {
-    if (login?.data?.user_display_name)
-      return "Logado :" + login.data.user_display_name;
-
-    if (login?.error) {
-      let string = (login?.error).replace("<strong>Erro:</strong>", "");
-
+  function validateToken() {
+    if (token?.data?.user_display_name)
+      return "Tem token para o usuário: " + token.data.user_display_name;
+    if (token?.error) {
+      let string = token.error.replace("<strong>Erro:</strong>", "");
       string = capitalizeFirstLetter(string);
       return string;
     } else {
-      return "Necessario efetuar login";
+      return "Necessário efetuar login para setor o token";
+    }
+  }
+
+  function validateUser() {
+    if (user?.data?.username) return "Usuário logado : " + user.data.username;
+    if (user?.error) {
+      let string = user.error.replace("<strong>Erro:</strong>", "");
+      string = capitalizeFirstLetter(string);
+      return string;
+    } else {
+      return "Necessario ter um token";
     }
   }
 
@@ -58,10 +79,10 @@ function App() {
         <button onClick={() => dispatch(modalClose())}>Fechar Modal</button>
         <h1>MODAL</h1>
         <div>
-          <p>{login?.loading ? "Carregando..." : validateUser()}</p>
+          <p>{token?.loading ? "Buscando token..." : validateToken()}</p>
+          <p>{user?.loading ? "Buscando usuário..." : validateUser()}</p>
         </div>
       </div>
-
       <div>
         <h1>LOGIN</h1>
         <form
@@ -77,6 +98,7 @@ function App() {
             <span>Usuário : </span>
           </label>
           <input
+            style={{ padding: "5px" }}
             id="username"
             name="username"
             type="text"
@@ -84,11 +106,11 @@ function App() {
             value={username}
             onChange={({ target }) => setUsername(target.value)}
           />
-
           <label htmlFor="password">
             <span>Senha : </span>
           </label>
           <input
+            style={{ padding: "5px" }}
             id="password"
             name="password"
             type="password"
@@ -97,8 +119,17 @@ function App() {
             onChange={({ target }) => setPassword(target.value)}
             autoComplete=""
           />
-
-          <button style={{width :  "30%", alignItems: 'end', justifyContent:'flex-end'}} type="submit">Logar</button>
+          <button
+            style={{
+              width: "30%",
+              alignSelf: "flex-end",
+              marginTop: "15px",
+              padding: "5px",
+            }}
+            type="submit"
+          >
+            Logar
+          </button>
         </form>
       </div>
     </div>
