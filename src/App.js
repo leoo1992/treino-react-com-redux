@@ -29,7 +29,7 @@ function App() {
   }
 
   function validateToken() {
-    if (token?.data?.user_display_name)
+    if (token?.data)
       return "Tem token para o usuário: " + token.data.user_display_name;
     if (token?.error) {
       let string = token.error.replace("<strong>Erro:</strong>", "");
