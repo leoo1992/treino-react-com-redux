@@ -89,6 +89,19 @@ export const fetchUser = (token) => async (dispatch) => {
   }
 };
 
+export const login = (user) => async (dispatch) => {
+  if (user) {
+    try {
+      const { payload } = await dispatch(fetchToken(user));
+      if (payload?.token) {
+        await dispatch(fetchUser(payload.token));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+};
+
 export const {
   fetchStartToken,
   fetchSucessToken,

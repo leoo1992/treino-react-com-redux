@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { contadorAdd, contadorDel } from "./redux/stores/contador/contador";
 import { modalOpen, modalClose } from "./redux/stores/modal/modal";
-import { fetchToken, fetchUser } from "./redux/stores/login/login";
+import { login } from "./redux/stores/login/login";
 
 function App() {
   const [username, setUsername] = useState("");
@@ -13,28 +13,14 @@ function App() {
   const user = useSelector((state) => state.login.user);
   const dispatch = useDispatch();
 
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault();
 
-    async function getAndSetUser(token) {
-      if (token) {
-        dispatch(fetchUser(token));
-      }
-    }
-
-    async function getAndSetToken(username, password) {
-      if (username && password) {
-        return dispatch(fetchToken({ username, password }));
-      }
-    }
-
-    const { payload } = await getAndSetToken(username, password);
-    await getAndSetUser(payload?.token);
+    dispatch(login({ username, password }));
 
     setUsername("");
     setPassword("");
-
-    return await e.target.reset();
+    return e.target.reset();
   }
 
   function capitalizeFirstLetter(string) {
