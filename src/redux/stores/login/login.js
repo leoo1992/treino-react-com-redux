@@ -19,4 +19,11 @@ export const login = (user) => async (dispatch) => {
   }
 };
 
+export const autoLogin = () => async (dispatch, getState) => {
+  const state = getState();
+  const data = state.login.token.data;
+  
+  if (data) return await dispatch(fetchUser(data.token));
+};
+
 export default reducer;

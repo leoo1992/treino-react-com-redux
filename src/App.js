@@ -1,17 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { contadorAdd, contadorDel } from "./redux/stores/contador/contador";
+import {
+  contadorAdd,
+  contadorDel,
+  somar,
+} from "./redux/stores/contador/contador";
 import { modalOpen, modalClose } from "./redux/stores/modal/modal";
-import { login } from "./redux/stores/login/login";
+import { autoLogin, login } from "./redux/stores/login/login";
 
 function App() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [value, setValue] = useState(0);
+  const dispatch = useDispatch();
   const contador = useSelector((state) => state.contador);
   const modal = useSelector((state) => state.modal);
   const token = useSelector((state) => state.login.token);
   const user = useSelector((state) => state.login.user);
-  const dispatch = useDispatch();
+
+  useEffect(() => {
+
+    dispatch(autoLogin());
+  }, [dispatch]);
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -29,7 +39,8 @@ function App() {
   }
 
   function validateToken() {
-    if (token?.data)
+
+    if (token?.data !== null && token?.data?.token !== null)
       return "Tem token para o usuário: " + token.data.user_display_name;
     if (token?.error) {
       let string = token.error.replace("<strong>Erro:</strong>", "");
@@ -53,22 +64,61 @@ function App() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      {/* CONTADOR */}
       <div>
-        <h1>Total: {contador.total}</h1>
-        <button onClick={() => dispatch(contadorAdd())}>+</button>
-        <button onClick={() => dispatch(contadorDel())}>-</button>
-      </div>
-      <div style={{ display: modal.open ? "none" : "block" }}>
-        <button onClick={() => dispatch(modalOpen())}>Abrir Modal</button>
-      </div>
-      <div style={{ display: modal.open ? "block" : "none" }}>
-        <button onClick={() => dispatch(modalClose())}>Fechar Modal</button>
-        <h1>MODAL</h1>
-        <div>
-          <p>{token?.loading ? "Buscando token..." : validateToken()}</p>
-          <p>{user?.loading ? "Buscando usuário..." : validateUser()}</p>
+        <h1>Total: {parseInt(contador)}</h1>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: ".5rem",
+          }}
+        >
+          <div style={{ display: "flex", gap: ".5rem" }}>
+            <button
+              style={{ width: "30px" }}
+              onClick={() => dispatch(contadorAdd())}
+            >
+              +
+            </button>
+            <button
+              style={{ width: "30px" }}
+              onClick={() => dispatch(contadorDel())}
+            >
+              -
+            </button>
+          </div>
+          <div style={{ display: "flex", gap: ".5rem" }}>
+            <input
+              style={{ width: "60px" }}
+              type="number"
+              value={value}
+              onChange={({ target }) => setValue(target.value)}
+            />
+            <button
+              style={{ width: "70px" }}
+              onClick={() => dispatch(somar(parseInt(value)))}
+            >
+              Somar
+            </button>
+          </div>
         </div>
       </div>
+      {/* MODAL */}
+      <div>
+        <div style={{ display: modal.open ? "none" : "block" }}>
+          <button onClick={() => dispatch(modalOpen())}>Abrir Modal</button>
+        </div>
+        <div style={{ display: modal.open ? "block" : "none" }}>
+          <button onClick={() => dispatch(modalClose())}>Fechar Modal</button>
+          <h1>MODAL</h1>
+          <div>
+            <p>{token?.loading ? "Buscando token..." : validateToken()}</p>
+            <p>{user?.loading ? "Buscando usuário..." : validateUser()}</p>
+          </div>
+        </div>
+      </div>
+      {/* LOGIN */}
       <div>
         <h1>LOGIN</h1>
         <form
